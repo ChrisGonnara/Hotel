@@ -1,40 +1,43 @@
 #include <stdio.h>
-#include "clientes.h"
-#include "funcionarios.h"
-#include "quartos.h"
-#include "estadias.h"
+#include <stdlib.h>
+#include <locale.h>
+#include "hotel.h" // incluir o arquivo hotel
 
-int main(){
-    int op;
+int main() {
+    setlocale(LC_ALL, "Portuguese"); // Pra ser em portugues
+    int opcao;
 
-    do{
-        printf("\n=== HOTEL DESCANSO GARANTIDO ===\n");
-        printf("1 - Cadastrar cliente\n");
-        printf("2 - Cadastrar funcionario\n");
-        printf("3 - Cadastrar quarto\n");
-        printf("4 - Cadastrar estadia\n");
-        printf("5 - Baixar estadia\n");
-        printf("6 - Pesquisar cliente\n");
-        printf("7 - Pesquisar funcionario\n");
-        printf("8 - Mostrar estadias de cliente\n");
-        printf("9 - Pontos de fidelidade\n");
-        printf("0 - Sair\nOpcao: ");
+    do {
+        printf("\n\n=== HOTEL DESCANSO GARANTIDO ===\n");
+        printf("1. Cadastrar Cliente\n");
+        printf("2. Cadastrar Funcionario\n");
+        printf("3. Cadastrar Quarto\n");
+        printf("4. Cadastrar Estadia\n");
+        printf("5. Dar Baixa em Estadia\n");
+        printf("6. Pesquisar Cliente\n");
+        printf("7. Pesquisar Funcionario\n");
+        printf("8. Mostrar Estadias de um Cliente\n");
+        printf("0. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
 
-        scanf("%d", &op);
+        // Impede erro
+        fflush(stdin); 
 
-        switch(op){
+        switch(opcao) {
             case 1: cadastrarCliente(); break;
             case 2: cadastrarFuncionario(); break;
             case 3: cadastrarQuarto(); break;
             case 4: cadastrarEstadia(); break;
-            case 5: finalizarEstadia(); break;
+            case 5: darBaixaEstadia(); break;
             case 6: pesquisarCliente(); break;
             case 7: pesquisarFuncionario(); break;
-            case 8: estadiasPorCliente(); break;
-            case 9: pontosFidelidade(); break;
+            case 8: mostrarEstadiasCliente(); break;
+            case 0: printf("Saindo do sistema...\n"); break;
+            default: printf("Opcao invalida!\n");
         }
 
-    } while(op != 0);
+    } while (opcao != 0);
 
     return 0;
 }
