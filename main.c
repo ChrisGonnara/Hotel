@@ -1,10 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <locale.h>
-#include "hotel.h" // incluir o arquivo hotel
+// ... (Cole aqui as structs e as funções acima) ...
 
 int main() {
-    setlocale(LC_ALL, "Portuguese"); // Pra ser em portugues
+    setlocale(LC_ALL, "Portuguese");
     int opcao;
 
     do {
@@ -12,8 +9,8 @@ int main() {
         printf("1. Cadastrar Cliente\n");
         printf("2. Cadastrar Funcionario\n");
         printf("3. Cadastrar Quarto\n");
-        printf("4. Cadastrar Estadia\n");
-        printf("5. Dar Baixa em Estadia\n");
+        printf("4. Cadastrar Estadia (Check-in)\n");
+        printf("5. Dar Baixa em Estadia (Check-out)\n");
         printf("6. Pesquisar Cliente\n");
         printf("7. Pesquisar Funcionario\n");
         printf("8. Mostrar Estadias de um Cliente\n");
@@ -21,8 +18,9 @@ int main() {
         printf("Escolha uma opcao: ");
         scanf("%d", &opcao);
 
-        // Impede erro
-        fflush(stdin); 
+        // Substitua o fflush(stdin) por limparBuffer() se usar a minha função
+        // ou mantenha fflush(stdin) se estiver no Windows.
+        // limparBuffer(); 
 
         switch(opcao) {
             case 1: cadastrarCliente(); break;

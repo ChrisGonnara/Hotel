@@ -2,22 +2,18 @@
 #define HOTEL_H
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-// Definir as coisa para as funções, pro computador ler
-
+// Definição das Estruturas
 typedef struct {
     int codigo;
     char nome[100];
-    char endereco[150];
+    char endereco[100];
     char telefone[20];
 } Cliente;
 
 typedef struct {
     int codigo;
     char nome[100];
-    char telefone[20];
     char cargo[50];
     float salario;
 } Funcionario;
@@ -26,20 +22,20 @@ typedef struct {
     int numero;
     int quantidadeHospedes;
     float valorDiaria;
-    char status[15]; // ocupado ou vazio
+    int status; // 0 = Disponível, 1 = Ocupado
 } Quarto;
 
 typedef struct {
-    int codigo;
-    char dataEntrada[11]; // Dia/ Mes / Ano
-    char dataSaida[11];   // Dia / Mes / Ano 
-    int quantidadeDiarias;
+    int codigoEstadia;
     int codigoCliente;
     int numeroQuarto;
+    char dataEntrada[11]; // Formato DD/MM/AAAA
+    char dataSaida[11];
+    int quantidadeDiarias;
+    int ativa; // 1 = Ativa (check-in feito), 0 = Finalizada (checkout feito)
 } Estadia;
 
-// Todas as funções
-
+// Protótipos das funções
 void cadastrarCliente();
 void cadastrarFuncionario();
 void cadastrarQuarto();
@@ -48,6 +44,5 @@ void darBaixaEstadia();
 void pesquisarCliente();
 void pesquisarFuncionario();
 void mostrarEstadiasCliente();
-
 
 #endif

@@ -1,48 +1,48 @@
-#include "hotel.h"
+#ifndef HOTEL_H
+#define HOTEL_H
 
-// Funções
+#include <stdio.h>
 
-void cadastrarCliente() {
-    printf("\n--- Cadastro de Cliente ---\n");
-    // ABRE O ARQUVIO E SALVA
-    printf("Funcao ainda nao implementada.\n");
-}
+// --- STRUCTS ---
+typedef struct {
+    int codigo;
+    char nome[100];
+    char endereco[100];
+    char telefone[20];
+} Cliente;
 
-void cadastrarFuncionario() {
-    printf("\n--- Cadastro de Funcionario ---\n");
-    // Abre o arquivo e salva
-    printf("Funcao ainda nao implementada.\n");
-}
+typedef struct {
+    int codigo;
+    char nome[100];
+    char cargo[50];
+    float salario;
+} Funcionario;
 
-void cadastrarQuarto() {
-    printf("\n--- Cadastro de Quarto ---\n");
-    // Abre o arquivo e salva
-    printf("Funcao ainda nao implementada.\n");
-}
+typedef struct {
+    int numero;
+    int quantidadeHospedes;
+    float valorDiaria;
+    int status; 
+} Quarto;
 
-void cadastrarEstadia() {
-    printf("\n--- Cadastro de Estadia ---\n");
-    // Verifica e grava
-    printf("Funcao ainda nao implementada.\n");
-}
+typedef struct {
+    int codigoEstadia;
+    int codigoCliente;
+    int numeroQuarto;
+    char dataEntrada[11]; 
+    char dataSaida[11];
+    int quantidadeDiarias;
+    int ativa; 
+} Estadia;
 
-void darBaixaEstadia() {
-    printf("\n--- Baixa de Estadia ---\n");
-    // Calculo de valores e pontos
-    printf("Funcao ainda nao implementada.\n");
-}
+// --- PROTOTIPOS ---
+void cadastrarCliente();
+void cadastrarFuncionario();
+void cadastrarQuarto();
+void cadastrarEstadia();
+void darBaixaEstadia();
+void pesquisarCliente();
+void pesquisarFuncionario();
+void mostrarEstadiasCliente();
 
-void pesquisarCliente() {
-    printf("\n--- Pesquisa de Cliente ---\n");
-    printf("Funcao ainda nao implementada.\n");
-}
-
-void pesquisarFuncionario() {
-    printf("\n--- Pesquisa de Funcionario ---\n");
-    printf("Funcao ainda nao implementada.\n");
-}
-
-void mostrarEstadiasCliente() {
-    printf("\n--- Historico de Estadias ---\n");
-    printf("Funcao ainda nao implementada.\n");
-}
+#endif
