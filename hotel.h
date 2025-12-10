@@ -3,9 +3,7 @@
 
 #include <stdio.h>
 
-
-
-// Definição das Estruturas
+// --- Definição das Estruturas ---
 typedef struct {
     int codigo;
     char nome[100];
@@ -34,10 +32,10 @@ typedef struct {
     char dataEntrada[11]; // Formato DD/MM/AAAA
     char dataSaida[11];
     int quantidadeDiarias;
-    int ativa; // 1 = Ativa (check-in feito), 0 = Finalizada (checkout feito)
+    int ativa; // 1 = Ativa, 0 = Finalizada
 } Estadia;
 
-// Protótipos das funções
+// --- Protótipos das funções ---
 void cadastrarCliente();
 void cadastrarFuncionario();
 void cadastrarQuarto();

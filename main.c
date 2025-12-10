@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
-#include "hotel.h" // <--- Note que incluímos o .H, não o .C
+#include "hotel.h" 
 
 int main() {
     setlocale(LC_ALL, "Portuguese");
@@ -21,9 +21,7 @@ int main() {
         printf("Escolha uma opcao: ");
         scanf("%d", &opcao);
 
-        // Substitua o fflush(stdin) por limparBuffer() se usar a minha função
-        // ou mantenha fflush(stdin) se estiver no Windows.
-        // limparBuffer(); 
+        fflush(stdin); // Limpa o enter do menu
 
         switch(opcao) {
             case 1: cadastrarCliente(); break;
