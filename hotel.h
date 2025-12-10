@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+
+
 // Definição das Estruturas
 typedef struct {
     int codigo;

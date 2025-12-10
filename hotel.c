@@ -1,5 +1,7 @@
-#ifndef HOTEL_H
-#define HOTEL_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "hotel.h"
 
 #include <stdio.h>
 

@@ -1,4 +1,7 @@
-// ... (Cole aqui as structs e as funções acima) ...
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include "hotel.h" // <--- Note que incluímos o .H, não o .C
 
 int main() {
     setlocale(LC_ALL, "Portuguese");
