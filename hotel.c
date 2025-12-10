@@ -1,281 +1,572 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "hotel.h" // Importa as structs do arquivo .h
+#include "hotel.h"
 
-// --- Funções Auxiliares (Internas) ---
+#define CLIENTES_FILE "clientes_novo.dat"
+#define FUNCIONARIOS_FILE "funcionarios_novo.dat"
+#define QUARTOS_FILE "quartos_novo.dat"
+#define ESTADIAS_FILE "estadias_novo.dat"
 
-// Função para limpar o buffer do teclado (substitui fflush em alguns casos)
-void limparBuffer() {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
+
+int gerarNovoCodigoCliente() {
+    FILE *f = fopen(CLIENTES_FILE, "rb");
+    int count = 0;
+    if (f != NULL) {
+        Cliente c;
+        while (fread(&c, sizeof(Cliente), 1, f) == 1) {
+            count++;
+        }
+        fclose(f);
+    }
+    return count + 1;
 }
 
-// Função para gerar código automático baseado no tamanho do arquivo
-int gerarCodigo(char *nomeArquivo, size_t tamanhoStruct) {
-    FILE *arquivo = fopen(nomeArquivo, "rb");
-    if (arquivo == NULL) return 1; // Se arquivo não existe, começa do 1
-    fseek(arquivo, 0, SEEK_END);
-    int qtd = ftell(arquivo) / tamanhoStruct;
-    fclose(arquivo);
-    return qtd + 1;
+int gerarNovoCodigoFuncionario() {
+    FILE *f = fopen(FUNCIONARIOS_FILE, "rb");
+    int count = 0;
+    if (f != NULL) {
+        Funcionario x;
+        while (fread(&x, sizeof(Funcionario), 1, f) == 1) {
+            count++;
+        }
+        fclose(f);
+    }
+    return count + 1;
 }
 
-// --- Implementação das Funções Principais ---
+int gerarNovoCodigoEstadia() {
+    FILE *f = fopen(ESTADIAS_FILE, "rb");
+    int count = 0;
+    if (f != NULL) {
+        Estadia e;
+        while (fread(&e, sizeof(Estadia), 1, f) == 1) {
+            count++;
+        }
+        fclose(f);
+    }
+    return count + 1;
+}
+
+int clienteExiste(int codigo) {
+    FILE *f = fopen(CLIENTES_FILE, "rb");
+    if (f == NULL) return 0;
+    Cliente c;
+    while (fread(&c, sizeof(Cliente), 1, f) == 1) {
+        if (c.codigo == codigo) {
+            fclose(f);
+            return 1;
+        }
+    }
+    fclose(f);
+    return 0;
+}
+
+int obterCodigoClientePorNome(const char *nomeBusca) {
+    FILE *f = fopen(CLIENTES_FILE, "rb");
+    if (f == NULL) return -1;
+    Cliente c;
+    while (fread(&c, sizeof(Cliente), 1, f) == 1) {
+        if (strstr(c.nome, nomeBusca) != NULL) {
+            fclose(f);
+            return c.codigo;
+        }
+    }
+    fclose(f);
+    return -1;
+}
+
+int dataParaDias(const char *data) {
+    int d, m, a;
+    if (sscanf(data, "%d/%d/%d", &d, &m, &a) != 3) return 0;
+    return a * 365 + m * 30 + d;
+}
+
+int diferencaDias(const char *entrada, const char *saida) {
+    return dataParaDias(saida) - dataParaDias(entrada);
+}
+
+int quartoDisponivelPeriodo(int numeroQuarto, const char *entrada, const char *saida) {
+    FILE *f = fopen(ESTADIAS_FILE, "rb");
+    if (f == NULL) return 1;
+
+    Estadia e;
+    int iniNovo = dataParaDias(entrada);
+    int fimNovo = dataParaDias(saida);
+
+    while (fread(&e, sizeof(Estadia), 1, f) == 1) {
+        if (e.numeroQuarto == numeroQuarto) {
+            int ini = dataParaDias(e.dataEntrada);
+            int fim = dataParaDias(e.dataSaida);
+
+            if (!(fimNovo <= ini || iniNovo >= fim)) {
+                fclose(f);
+                return 0;
+            }
+        }
+    }
+    fclose(f);
+    return 1;
+}
+
+int calcularPontosFidelidadeInterno(int codigoCliente) {
+    FILE *f = fopen(ESTADIAS_FILE, "rb");
+    if (f == NULL) return 0;
+
+    Estadia e;
+    int total = 0;
+
+    while (fread(&e, sizeof(Estadia), 1, f) == 1) {
+        if (e.codigoCliente == codigoCliente) {
+            total += e.quantidadeDiarias;
+        }
+    }
+
+    fclose(f);
+    return total * 10;
+}
 
 void cadastrarCliente() {
     Cliente c;
-    FILE *arquivo = fopen("clientes.dat", "ab");
-    if (arquivo == NULL) { printf("Erro ao abrir arquivo!\n"); return; }
+    c.codigo = gerarNovoCodigoCliente();
 
-    printf("\n--- Cadastro de Cliente ---\n");
-    c.codigo = gerarCodigo("clientes.dat", sizeof(Cliente));
-    printf("Codigo gerado: %d\n", c.codigo);
+    printf("\n+--------------------------------------+\n");
+    printf("|          CADASTRO DE CLIENTE         |\n");
+    printf("+--------------------------------------+\n\n");
 
-    limparBuffer(); 
-    printf("Nome: ");
-    fgets(c.nome, 100, stdin);
-    c.nome[strcspn(c.nome, "\n")] = 0; // Remove o enter do final
+    printf("Codigo gerado: %d\n\n", c.codigo);
 
-    printf("Endereco: ");
-    fgets(c.endereco, 100, stdin);
-    c.endereco[strcspn(c.endereco, "\n")] = 0;
+    printf("Nome........: ");
+    scanf(" %99[^\n]", c.nome);
 
-    printf("Telefone: ");
-    fgets(c.telefone, 20, stdin);
-    c.telefone[strcspn(c.telefone, "\n")] = 0;
+    printf("Endereco....: ");
+    scanf(" %149[^\n]", c.endereco);
 
-    fwrite(&c, sizeof(Cliente), 1, arquivo);
-    fclose(arquivo);
-    printf("Cliente salvo com sucesso!\n");
+    printf("Telefone....: ");
+    scanf(" %19[^\n]", c.telefone);
+
+    FILE *f = fopen(CLIENTES_FILE, "ab");
+    if (f == NULL) f = fopen(CLIENTES_FILE, "wb");
+    if (f == NULL) {
+        printf("\n[ERRO] Arquivo nao abriu.\n");
+        return;
+    }
+
+    fwrite(&c, sizeof(Cliente), 1, f);
+    fclose(f);
+
+    printf("\n[OK] Cliente cadastrado.\n");
 }
 
 void cadastrarFuncionario() {
-    Funcionario f;
-    FILE *arquivo = fopen("funcionarios.dat", "ab");
-    if (arquivo == NULL) { printf("Erro ao abrir arquivo!\n"); return; }
+    Funcionario f1;
+    f1.codigo = gerarNovoCodigoFuncionario();
 
-    printf("\n--- Cadastro de Funcionario ---\n");
-    f.codigo = gerarCodigo("funcionarios.dat", sizeof(Funcionario));
-    printf("Codigo gerado: %d\n", f.codigo);
+    printf("\n+--------------------------------------+\n");
+    printf("|       CADASTRO DE FUNCIONARIO        |\n");
+    printf("+--------------------------------------+\n\n");
 
-    limparBuffer();
-    printf("Nome: ");
-    fgets(f.nome, 100, stdin);
-    f.nome[strcspn(f.nome, "\n")] = 0;
+    printf("Codigo gerado: %d\n\n", f1.codigo);
 
-    printf("Cargo: ");
-    fgets(f.cargo, 50, stdin);
-    f.cargo[strcspn(f.cargo, "\n")] = 0;
+    printf("Nome........: ");
+    scanf(" %99[^\n]", f1.nome);
 
-    printf("Salario: ");
-    scanf("%f", &f.salario);
+    printf("Telefone....: ");
+    scanf(" %19[^\n]", f1.telefone);
 
-    fwrite(&f, sizeof(Funcionario), 1, arquivo);
-    fclose(arquivo);
-    printf("Funcionario salvo com sucesso!\n");
+    printf("Cargo.......: ");
+    scanf(" %49[^\n]", f1.cargo);
+
+    printf("Salario (R$): ");
+    scanf("%f", &f1.salario);
+
+    FILE *f = fopen(FUNCIONARIOS_FILE, "ab");
+    if (f == NULL) f = fopen(FUNCIONARIOS_FILE, "wb");
+    if (f == NULL) {
+        printf("\n[ERRO] Arquivo nao abriu.\n");
+        return;
+    }
+
+    fwrite(&f1, sizeof(Funcionario), 1, f);
+    fclose(f);
+
+    printf("\n[OK] Funcionario cadastrado.\n");
 }
 
 void cadastrarQuarto() {
     Quarto q;
-    FILE *arquivo = fopen("quartos.dat", "ab");
-    if (arquivo == NULL) { printf("Erro ao abrir arquivo!\n"); return; }
+    int existe;
 
-    printf("\n--- Cadastro de Quarto ---\n");
-    printf("Numero do Quarto: ");
-    scanf("%d", &q.numero);
-    
-    printf("Capacidade de Hospedes: ");
-    scanf("%d", &q.quantidadeHospedes);
+    printf("\n+--------------------------------------+\n");
+    printf("|          CADASTRO DE QUARTO          |\n");
+    printf("+--------------------------------------+\n\n");
 
-    printf("Valor da Diaria: ");
-    scanf("%f", &q.valorDiaria);
+    while (1) {
+        printf("Numero do quarto...............: ");
+        scanf("%d", &q.numero);
 
-    q.status = 0; // 0 = Livre
+        FILE *f = fopen(QUARTOS_FILE, "rb");
+        existe = 0;
 
-    fwrite(&q, sizeof(Quarto), 1, arquivo);
-    fclose(arquivo);
-    printf("Quarto salvo com sucesso!\n");
-}
-
-void cadastrarEstadia() {
-    Estadia e;
-    Quarto q;
-    int encontrouQuarto = 0;
-
-    printf("\n--- Cadastro de Estadia ---\n");
-    printf("Codigo do Cliente: ");
-    scanf("%d", &e.codigoCliente);
-
-    printf("Numero do Quarto desejado: ");
-    scanf("%d", &e.numeroQuarto);
-
-    // Verificar se o quarto existe e está livre
-    FILE *arqQuarto = fopen("quartos.dat", "rb+");
-    if (arqQuarto != NULL) {
-        while(fread(&q, sizeof(Quarto), 1, arqQuarto)) {
-            if(q.numero == e.numeroQuarto) {
-                if(q.status == 1) {
-                    printf("Erro: Quarto ja esta ocupado!\n");
-                    fclose(arqQuarto);
-                    return;
-                }
-                q.status = 1; // Ocupa o quarto
-                fseek(arqQuarto, -sizeof(Quarto), SEEK_CUR); // Volta o cursor para atualizar
-                fwrite(&q, sizeof(Quarto), 1, arqQuarto);
-                encontrouQuarto = 1;
-                break;
-            }
-        }
-        fclose(arqQuarto);
-    } else {
-        printf("Erro: Nenhum quarto cadastrado.\n");
-        return;
-    }
-
-    if (!encontrouQuarto) {
-        printf("Quarto nao encontrado!\n");
-        return;
-    }
-
-    limparBuffer();
-    e.codigoEstadia = gerarCodigo("estadias.dat", sizeof(Estadia));
-    
-    printf("Data de Entrada (DD/MM/AAAA): ");
-    fgets(e.dataEntrada, 11, stdin);
-    limparBuffer();
-
-    printf("Quantidade de Diarias: ");
-    scanf("%d", &e.quantidadeDiarias);
-
-    strcpy(e.dataSaida, "Aberto");
-    e.ativa = 1; 
-
-    FILE *arqEstadia = fopen("estadias.dat", "ab");
-    fwrite(&e, sizeof(Estadia), 1, arqEstadia);
-    fclose(arqEstadia);
-
-    printf("Check-in realizado! Codigo da Estadia: %d\n", e.codigoEstadia);
-}
-
-void darBaixaEstadia() {
-    int numQuarto;
-    Estadia e;
-    Quarto q;
-    int achouEstadia = 0;
-    float valorTotal = 0.0;
-
-    printf("\n--- Baixa de Estadia ---\n");
-    printf("Digite o numero do quarto para checkout: ");
-    scanf("%d", &numQuarto);
-
-    FILE *arqEstadia = fopen("estadias.dat", "rb+");
-    if (arqEstadia == NULL) { printf("Sem estadias registradas.\n"); return; }
-
-    while(fread(&e, sizeof(Estadia), 1, arqEstadia)) {
-        if(e.numeroQuarto == numQuarto && e.ativa == 1) {
-            
-            // Buscar valor da diária no arquivo de quartos e liberar quarto
-            FILE *arqQuarto = fopen("quartos.dat", "rb+");
-            while(fread(&q, sizeof(Quarto), 1, arqQuarto)) {
-                if(q.numero == numQuarto) {
-                    valorTotal = q.valorDiaria * e.quantidadeDiarias;
-                    q.status = 0; // Libera quarto
-                    fseek(arqQuarto, -sizeof(Quarto), SEEK_CUR);
-                    fwrite(&q, sizeof(Quarto), 1, arqQuarto);
+        if (f != NULL) {
+            Quarto aux;
+            while (fread(&aux, sizeof(Quarto), 1, f) == 1) {
+                if (aux.numero == q.numero) {
+                    existe = 1;
                     break;
                 }
             }
-            fclose(arqQuarto);
+            fclose(f);
+        }
 
-            // Finalizar estadia
-            e.ativa = 0;
-            printf("Data de Saida (DD/MM/AAAA): ");
-            limparBuffer();
-            fgets(e.dataSaida, 11, stdin);
-            
-            fseek(arqEstadia, -sizeof(Estadia), SEEK_CUR);
-            fwrite(&e, sizeof(Estadia), 1, arqEstadia);
-            
-            achouEstadia = 1;
+        if (existe) {
+            printf("[AVISO] Numero ja existe.\n\n");
+        } else break;
+    }
+
+    printf("Capacidade maxima..............: ");
+    scanf("%d", &q.quantidadeHospedes);
+
+    printf("Valor diaria...................: ");
+    scanf("%f", &q.valorDiaria);
+
+    strcpy(q.status, "desocupado");
+
+    FILE *f = fopen(QUARTOS_FILE, "ab");
+    if (f == NULL) f = fopen(QUARTOS_FILE, "wb");
+    if (f == NULL) {
+        printf("\n[ERRO] Nao foi possivel abrir o arquivo.\n");
+        return;
+    }
+
+    fwrite(&q, sizeof(Quarto), 1, f);
+    fclose(f);
+
+    printf("\n[OK] Quarto cadastrado.\n");
+}
+
+void cadastrarEstadia() {
+    int codigoCliente, quantidadeHospedes;
+    char entrada[11], saida[11];
+
+    printf("\n+--------------------------------------+\n");
+    printf("|          CADASTRO DE ESTADIA         |\n");
+    printf("+--------------------------------------+\n\n");
+
+    printf("Codigo do cliente........: ");
+    scanf("%d", &codigoCliente);
+
+    if (!clienteExiste(codigoCliente)) {
+        printf("\n[ERRO] Cliente nao encontrado.\n");
+        return;
+    }
+
+    printf("Quantidade de hospedes...: ");
+    scanf("%d", &quantidadeHospedes);
+
+    printf("Data entrada (dd/mm/aaaa): ");
+    scanf(" %10s", entrada);
+
+    printf("Data saida   (dd/mm/aaaa): ");
+    scanf(" %10s", saida);
+
+    int diarias = diferencaDias(entrada, saida);
+    if (diarias <= 0) {
+        printf("\n[ERRO] Datas invalidas.\n");
+        return;
+    }
+
+    FILE *fq = fopen(QUARTOS_FILE, "rb+");
+    if (fq == NULL) {
+        printf("\n[ERRO] Sem quartos cadastrados.\n");
+        return;
+    }
+
+    Quarto q;
+    int achou = 0;
+    long pos = 0;
+
+    while (fread(&q, sizeof(Quarto), 1, fq) == 1) {
+        if (q.quantidadeHospedes >= quantidadeHospedes &&
+            strcmp(q.status, "desocupado") == 0 &&
+            quartoDisponivelPeriodo(q.numero, entrada, saida)) {
+
+            achou = 1;
+            pos = ftell(fq) - sizeof(Quarto);
             break;
         }
     }
-    fclose(arqEstadia);
 
-    if(achouEstadia) {
-        printf("\n=== Checkout Sucesso ===\n");
-        printf("Total a pagar: R$ %.2f\n", valorTotal);
-    } else {
-        printf("Nenhuma estadia ativa encontrada para este quarto.\n");
+    if (!achou) {
+        fclose(fq);
+        printf("\n[AVISO] Nenhum quarto disponivel.\n");
+        return;
     }
+
+    Estadia e;
+    e.codigo = gerarNovoCodigoEstadia();
+    e.quantidadeDiarias = diarias;
+    strcpy(e.dataEntrada, entrada);
+    strcpy(e.dataSaida, saida);
+    e.codigoCliente = codigoCliente;
+    e.numeroQuarto = q.numero;
+
+    FILE *fe = fopen(ESTADIAS_FILE, "ab");
+    if (fe == NULL) fe = fopen(ESTADIAS_FILE, "wb");
+    if (fe == NULL) {
+        fclose(fq);
+        printf("\n[ERRO] Arquivo nao abriu.\n");
+        return;
+    }
+
+    fwrite(&e, sizeof(Estadia), 1, fe);
+    fclose(fe);
+
+    strcpy(q.status, "ocupado");
+    fseek(fq, pos, SEEK_SET);
+    fwrite(&q, sizeof(Quarto), 1, fq);
+    fclose(fq);
+
+    printf("\n[OK] Estadia cadastrada.\n");
+}
+
+void darBaixaEstadia() {
+    int codigo;
+
+    printf("\n+--------------------------------------+\n");
+    printf("|             BAIXA EM ESTADIA         |\n");
+    printf("+--------------------------------------+\n\n");
+
+    printf("Codigo da estadia: ");
+    scanf("%d", &codigo);
+
+    FILE *fe = fopen(ESTADIAS_FILE, "rb");
+    if (fe == NULL) {
+        printf("\n[AVISO] Nenhuma estadia cadastrada.\n");
+        return;
+    }
+
+    Estadia e;
+    int achou = 0;
+
+    while (fread(&e, sizeof(Estadia), 1, fe) == 1) {
+        if (e.codigo == codigo) {
+            achou = 1;
+            break;
+        }
+    }
+    fclose(fe);
+
+    if (!achou) {
+        printf("\n[ERRO] Estadia nao encontrada.\n");
+        return;
+    }
+
+    FILE *fq = fopen(QUARTOS_FILE, "rb+");
+    if (fq == NULL) {
+        printf("\n[ERRO] Arquivo de quartos nao abriu.\n");
+        return;
+    }
+
+    Quarto q;
+    long pos = 0;
+    int ok = 0;
+
+    while (fread(&q, sizeof(Quarto), 1, fq) == 1) {
+        if (q.numero == e.numeroQuarto) {
+            ok = 1;
+            pos = ftell(fq) - sizeof(Quarto);
+            break;
+        }
+    }
+
+    if (!ok) {
+        fclose(fq);
+        printf("\n[ERRO] Quarto nao encontrado.\n");
+        return;
+    }
+
+    float total = e.quantidadeDiarias * q.valorDiaria;
+    printf("\nValor total: R$ %.2f\n", total);
+
+    strcpy(q.status, "desocupado");
+
+    fseek(fq, pos, SEEK_SET);
+    fwrite(&q, sizeof(Quarto), 1, fq);
+    fclose(fq);
+
+    printf("\n[OK] Baixa realizada.\n");
 }
 
 void pesquisarCliente() {
-    char nomeBusca[100];
+    int opcao;
     Cliente c;
-    int encontrou = 0;
+    int achou = 0;
 
-    limparBuffer();
-    printf("\nDigite o nome (ou parte) para buscar: ");
-    fgets(nomeBusca, 100, stdin);
-    nomeBusca[strcspn(nomeBusca, "\n")] = 0;
+    printf("\n+--------------------------------------+\n");
+    printf("|           PESQUISAR CLIENTE          |\n");
+    printf("+--------------------------------------+\n\n");
 
-    FILE *arquivo = fopen("clientes.dat", "rb");
-    if (arquivo == NULL) { printf("Nenhum registro.\n"); return; }
+    printf("1 - Codigo\n2 - Nome\nOpcao: ");
+    scanf("%d", &opcao);
+    getchar();
 
-    while(fread(&c, sizeof(Cliente), 1, arquivo)) {
-        if(strstr(c.nome, nomeBusca) != NULL) {
-            printf("ID: %d | Nome: %s | Tel: %s\n", c.codigo, c.nome, c.telefone);
-            encontrou = 1;
-        }
+    FILE *f = fopen(CLIENTES_FILE, "rb");
+    if (f == NULL) {
+        printf("\nNenhum cliente cadastrado.\n");
+        return;
     }
-    fclose(arquivo);
-    if(!encontrou) printf("Ninguem encontrado.\n");
+
+    if (opcao == 1) {
+        int codigo;
+        printf("Informe o codigo: ");
+        scanf("%d", &codigo);
+
+        while (fread(&c, sizeof(Cliente), 1, f) == 1) {
+            if (c.codigo == codigo) {
+                printf("\nCodigo: %d\nNome: %s\nEndereco: %s\nTelefone: %s\n",
+                    c.codigo, c.nome, c.endereco, c.telefone);
+                achou = 1;
+                break;
+            }
+        }
+
+    } else if (opcao == 2) {
+        char nome[100];
+        printf("Informe parte do nome: ");
+        scanf(" %99[^\n]", nome);
+
+        while (fread(&c, sizeof(Cliente), 1, f) == 1) {
+            if (strstr(c.nome, nome) != NULL) {
+                printf("\nCodigo: %d\nNome: %s\nEndereco: %s\nTelefone: %s\n",
+                    c.codigo, c.nome, c.endereco, c.telefone);
+                achou = 1;
+            }
+        }
+
+    } else {
+        printf("\nOpcao invalida.\n");
+        fclose(f);
+        return;
+    }
+
+    fclose(f);
+
+    if (!achou) printf("\nCliente nao encontrado.\n");
 }
 
 void pesquisarFuncionario() {
-    char nomeBusca[100];
-    Funcionario f;
-    int encontrou = 0;
+    int opcao;
+    Funcionario f1;
+    int achou = 0;
 
-    limparBuffer();
-    printf("\nDigite o nome do funcionario: ");
-    fgets(nomeBusca, 100, stdin);
-    nomeBusca[strcspn(nomeBusca, "\n")] = 0;
+    printf("\n+--------------------------------------+\n");
+    printf("|         PESQUISAR FUNCIONARIO        |\n");
+    printf("+--------------------------------------+\n\n");
 
-    FILE *arquivo = fopen("funcionarios.dat", "rb");
-    if (arquivo == NULL) { printf("Nenhum registro.\n"); return; }
+    printf("1 - Codigo\n2 - Nome\nOpcao: ");
+    scanf("%d", &opcao);
+    getchar();
 
-    while(fread(&f, sizeof(Funcionario), 1, arquivo)) {
-        if(strstr(f.nome, nomeBusca) != NULL) {
-            printf("ID: %d | Nome: %s | Cargo: %s\n", f.codigo, f.nome, f.cargo);
-            encontrou = 1;
-        }
+    FILE *f = fopen(FUNCIONARIOS_FILE, "rb");
+    if (f == NULL) {
+        printf("\nNenhum funcionario cadastrado.\n");
+        return;
     }
-    fclose(arquivo);
-    if(!encontrou) printf("Ninguem encontrado.\n");
+
+    if (opcao == 1) {
+        int codigo;
+        printf("Informe o codigo: ");
+        scanf("%d", &codigo);
+
+        while (fread(&f1, sizeof(Funcionario), 1, f) == 1) {
+            if (f1.codigo == codigo) {
+                printf("\nCodigo: %d\nNome: %s\nTelefone: %s\nCargo: %s\nSalario: %.2f\n",
+                    f1.codigo, f1.nome, f1.telefone, f1.cargo, f1.salario);
+                achou = 1;
+                break;
+            }
+        }
+
+    } else if (opcao == 2) {
+        char nome[100];
+        printf("Informe parte do nome: ");
+        scanf(" %99[^\n]", nome);
+
+        while (fread(&f1, sizeof(Funcionario), 1, f) == 1) {
+            if (strstr(f1.nome, nome) != NULL) {
+                printf("\nCodigo: %d\nNome: %s\nTelefone: %s\nCargo: %s\nSalario: %.2f\n",
+                    f1.codigo, f1.nome, f1.telefone, f1.cargo, f1.salario);
+                achou = 1;
+            }
+        }
+
+    } else {
+        printf("\nOpcao invalida.\n");
+        fclose(f);
+        return;
+    }
+
+    fclose(f);
+
+    if (!achou) printf("\nFuncionario nao encontrado.\n");
 }
 
 void mostrarEstadiasCliente() {
-    int codCliente;
+    int opcao, codigoCliente;
     Estadia e;
-    int encontrou = 0;
+    int achou = 0;
 
-    printf("\nDigite o Codigo do Cliente: ");
-    scanf("%d", &codCliente);
+    printf("\n+--------------------------------------+\n");
+    printf("|       ESTADIAS DE UM CLIENTE         |\n");
+    printf("+--------------------------------------+\n\n");
 
-    FILE *arquivo = fopen("estadias.dat", "rb");
-    if (arquivo == NULL) { printf("Nenhuma estadia registrada.\n"); return; }
+    printf("1 - Codigo\n2 - Nome\nOpcao: ");
+    scanf("%d", &opcao);
+    getchar();
 
-    printf("\n--- Historico ---\n");
-    while(fread(&e, sizeof(Estadia), 1, arquivo)) {
-        if(e.codigoCliente == codCliente) {
-            printf("Quarto: %d | Entrada: %s | Status: %s\n", 
-                   e.numeroQuarto, e.dataEntrada, e.ativa ? "Ativa" : "Finalizada");
-            encontrou = 1;
+    if (opcao == 1) {
+        printf("Codigo do cliente: ");
+        scanf("%d", &codigoCliente);
+
+        if (!clienteExiste(codigoCliente)) {
+            printf("\nCliente nao encontrado.\n");
+            return;
+        }
+
+    } else if (opcao == 2) {
+        char nome[100];
+        printf("Parte do nome: ");
+        scanf(" %99[^\n]", nome);
+
+        codigoCliente = obterCodigoClientePorNome(nome);
+        if (codigoCliente == -1) {
+            printf("\nCliente nao encontrado.\n");
+            return;
+        }
+
+    } else {
+        printf("\nOpcao invalida.\n");
+        return;
+    }
+
+    FILE *f = fopen(ESTADIAS_FILE, "rb");
+    if (f == NULL) {
+        printf("\nNenhuma estadia cadastrada.\n");
+        return;
+    }
+
+    while (fread(&e, sizeof(Estadia), 1, f) == 1) {
+        if (e.codigoCliente == codigoCliente) {
+            printf("\nCodigo estadia: %d\nEntrada: %s\nSaida: %s\nDiarias: %d\nQuarto: %d\n",
+                e.codigo, e.dataEntrada, e.dataSaida, e.quantidadeDiarias, e.numeroQuarto);
+            achou = 1;
         }
     }
-    fclose(arquivo);
-    if(!encontrou) printf("Nada encontrado para este cliente.\n");
+
+    fclose(f);
+
+    if (!achou) {
+        printf("\nNenhuma estadia encontrado.\n");
+    } else {
+        int pontos = calcularPontosFidelidadeInterno(codigoCliente);
+        printf("\nPontos de fidelidade: %d\n", pontos);
+    }
 }
